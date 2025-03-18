@@ -10,7 +10,7 @@
             "platform:levilamina",
             "type:mod"
         ],
-        "avatar_url":"https://github.com/LeafKnife/Stats/raw/main/logo.png"
+        "avatar_url":"https://github.com/LeafKnife/SignIn/raw/main/logo.png"
     },
     "asset_url": "https://github.com/LeafKnife/SignIn/releases/download/v$(version)/SignIn-windows-x64.zip",
     "prerequisites": {
