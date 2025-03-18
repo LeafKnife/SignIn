@@ -1,25 +1,28 @@
 {
     "format_version": 2,
-    "tooth": "my-mod",
-    "version": "0.0.0",
+    "tooth": "github.com/LeafKnife/SignIn",
+    "version": "0.1.0",
     "info": {
-        "name": "My Mod Name",
-        "description": "My Mod Description",
-        "author": "My Name",
+        "name": "SignIn",
+        "description": "签到插件",
+        "author": "LWenK",
         "tags": [
             "platform:levilamina",
             "type:mod"
-        ]
+        ],
+        "avatar_url":"https://github.com/LeafKnife/Stats/raw/main/logo.png"
     },
-    "asset_url": "My Asset Url",
+    "asset_url": "https://github.com/LeafKnife/SignIn/releases/download/v$(version)/SignIn-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": "My LeviLamina Dependency Version"
+        "github.com/LiteLDev/LeviLamina": ">=1.1.0",
+        "github.com/GroupMountain/GMLIB-Release": ">=1.0.0-rc.1"
     },
+    
     "files": {
         "place": [
             {
-                "src": "my-mod/*",
-                "dest": "plugins/my-mod/"
+                "src": "SignIn/*",
+                "dest": "plugins/SignIn/"
             }
         ]
     }
