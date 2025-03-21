@@ -42,8 +42,7 @@ void regCommand() {
                 break;
             }
             case SignParam::cui:
-                output.error("TODO");
-                // form::sendChestUI(*player);
+                form::sendChestUI(*player);
                 break;
             case SignParam::gui:
                 form::sendForm(*player);

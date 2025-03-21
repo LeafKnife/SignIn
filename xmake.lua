@@ -11,7 +11,7 @@ else
     add_requires("levilamina 1.1.0", {configs = {target_type = "client"}})
 end
 
-add_requires("gmlib 1.0.0-rc.1")
+add_requires("gmlib 1.0.0-rc.2")
 
 add_requires("levibuildscript")
 
