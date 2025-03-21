@@ -33,7 +33,7 @@ void sendForm(Player& player) {
         getCont(uuid)
     ));
     if (auto lastSignin = getLastTime(uuid); lastSignin.has_value()) {
-        fm.appendLabel(fmt::format("上次签到时间：", lastSignin.value()));
+        fm.appendLabel(fmt::format("  上次签到时间：{}", lastSignin.value()));
     }
     std::vector<std::string> vStr;
     auto                     WeekDay = calcDayOfWeek(tm.tm_year + 1900, tm.tm_mon + 1, 1);
