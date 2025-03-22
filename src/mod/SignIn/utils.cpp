@@ -17,9 +17,32 @@ bool isLeapYear(int year) {
     return isLeapYear;
 };
 
+int getSumDay(int year, int month, int day) {
+    int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int totalDays     = 0;
+
+    if (isLeapYear(year)) {
+        daysInMonth[1] = 29;
+    }
+
+    for (int i = 0; i < month - 1; i++) {
+        totalDays += daysInMonth[i];
+    }
+    totalDays += day;
+
+    return totalDays;
+}
+
+int calcDayOfWeek(int year, int month, int day) {
+    int w;
+    if (month == 1 || month == 2) month += 12, year--;
+    w = (day + 2 * month + 3 * (month + 1) / 5 + year + year / 4 - year / 100 + year / 400 + 1) % 7;
+    return w;
+}
+
 int getDaysInMonth(int month, int year) {
     int daysInMonth = 30;
-    switch (month + 1) {
+    switch (month) {
     case 1:
     case 3:
     case 5:

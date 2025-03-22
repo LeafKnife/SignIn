@@ -38,6 +38,57 @@ void signIn(mce::UUID uuid, int day) {
     setLastTime(uuid);
 };
 
+void getMonthData(mce::UUID uuid, MonthData& md, int month, int year) {
+    auto bitset   = getBitSet(uuid);
+    auto tm       = utils::getCurrentTime();
+    int  initYear = 0;
+    if (auto init = DB.get("SIGNIN_INIT"); init.has_value()) {
+        initYear = std::stoi(init.value());
+    } else {
+        initYear = tm.tm_year + 1900;
+        DB.set("SIGNIN_INIT", std::to_string(initYear));
+    }
+    if (md.year < 0 || md.month < 0) {
+        if (year < initYear) {
+            year = initYear;
+        }
+        if (year > tm.tm_year + 1900) {
+            year = tm.tm_year + 1900;
+        }
+        if (year == tm.tm_year + 1900) {
+            if (month > 12 || month < 1 || month > tm.tm_mon + 1) {
+                month = tm.tm_mon + 1;
+            }
+        }
+        md.month = month;
+        md.year  = year;
+    }
+    md.acc              = getAcc(uuid);
+    md.cont             = getCont(uuid);
+    auto lastTime       = getLastTime(uuid);
+    md.last_signin_time = lastTime.has_value() ? lastTime.value() : "";
+    md.isSignToday      = bitset.test(tm.tm_yday);
+    int firstDay        = utils::getSumDay(year, month) - 1;
+    int days            = utils::getDaysInMonth(month, year);
+    for (auto index = 0; index < days; index++) {
+        auto     yday = index + firstDay;
+        SignData data;
+        data.yday   = yday;
+        data.status = SignStatus::NotSign;
+        if (yday > tm.tm_yday) {
+            data.status = SignStatus::WillSign;
+        } else if (auto isSign = bitset.test(yday); isSign) {
+            data.status = SignStatus::HasSign;
+        } else {
+            if (year == tm.tm_year + 1900 && yday == tm.tm_yday) {
+                data.status = SignStatus::CanSign;
+            }
+        }
+
+        md.data.push_back(data);
+    }
+};
+
 int getAcc(mce::UUID uuid) {
     auto key   = getPlayerKey(uuid, std::to_string(utils::getCurrentTime().tm_year + 1900));
     auto count = 0;
