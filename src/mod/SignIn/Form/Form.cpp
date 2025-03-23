@@ -1,10 +1,13 @@
+#include "mod/SignIn/Form/Form.h"
 #include "fmt/core.h"
 #include "mod/SignIn/SignIn.h"
 
+#include <cstddef>
 #include <gmlib/gm/form/ChestForm.h>
 #include <gmlib/mc/world/ItemStack.h>
 #include <gmlib/mc/world/actor/Player.h>
 #include <ll/api/form/CustomForm.h>
+#include <mc/network/ConnectionRequest.h>
 #include <string>
 #include <vector>
 
@@ -55,64 +58,53 @@ void renderSignInForm(ll::form::CustomForm& fm, MonthData const& md) {
     }
     if (!content.empty()) fm.appendLabel(content);
 }
-void renderSignInChestUI(gmlib::form::ChestForm& fm, MonthData const& md) {
-    auto year  = md.year;
-    auto month = md.month;
-    fm.setTitle(fmt::format("签到 {:04d}-{:02d}", year, month));
-    auto WeekDay = utils::calcDayOfWeek(year, month, 1);
-    int  y       = 0;
-    for (size_t index = 0; index < md.data.size(); index++) {
-        auto slot = WeekDay + y * 9;
-        if (WeekDay > 6) {
-            y++;
-            WeekDay = 0;
-        }
-        WeekDay++;
-        auto status = md.data[index].status;
-        switch (status) {
-        case SignStatus::NotSign: {
-            auto                              item = gmlib::world::GMItemStack("minecraft:red_concrete", index + 1);
-            Bedrock::Safety::RedactableString customName;
-            customName.append(std::string("未签到"));
-            item.setCustomName(customName);
-            fm.registerSlot(slot, gmlib::world::GMItemStack(item));
-            break;
-        }
-        case SignStatus::HasSign: {
-            auto                              item = gmlib::world::GMItemStack("minecraft:lime_concrete", index + 1);
-            Bedrock::Safety::RedactableString customName;
-            customName.append(std::string("已签到"));
-            item.setCustomName(customName);
-            fm.registerSlot(slot, gmlib::world::GMItemStack(item));
-            break;
-        }
-        case SignStatus::CanSign: {
-            auto                              item = gmlib::world::GMItemStack("minecraft:yellow_concrete", index + 1);
-            Bedrock::Safety::RedactableString customName;
-            customName.append(std::string("今日未签到"));
-            item.setCustomName(customName);
-            auto yday = md.data[index].yday;
-            fm.registerSlot(slot, gmlib::world::GMItemStack(item), [yday](gmlib::world::actor::GMPlayer& gmp) {
-                auto uuid = gmp.getUuid();
-                signin::signIn(uuid, yday);
-            });
-            break;
-        }
-        case SignStatus::WillSign: {
-            auto item = gmlib::world::GMItemStack("minecraft:light_gray_concrete", index + 1);
-            Bedrock::Safety::RedactableString customName;
-            customName.append(std::string("不可签到"));
-            item.setCustomName(customName);
-            fm.registerSlot(slot, gmlib::world::GMItemStack(item));
-            break;
-        }
-        }
+
+inline void registerSlot(gmlib::form::ChestForm& fm, SignData const& data, int slot, int index) {
+    auto status = data.status;
+    auto day    = index + 1;
+    switch (status) {
+    case SignStatus::NotSign: {
+        auto                              item = gmlib::world::GMItemStack("minecraft:red_concrete", day);
+        Bedrock::Safety::RedactableString customName;
+        customName.append(fmt::format("§r日期 {}号 未签到", day));
+        item.setCustomName(customName);
+        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        break;
     }
-    for (auto index = 0; index < 6; index++) {
-        auto item = gmlib::world::GMItemStack("minecraft:barrier", 1);
-        fm.registerSlot(index * 9 + 0, gmlib::world::GMItemStack(item));
-        fm.registerSlot(index * 9 + 8, gmlib::world::GMItemStack(item));
+    case SignStatus::HasSign: {
+        auto                              item = gmlib::world::GMItemStack("minecraft:lime_concrete", day);
+        Bedrock::Safety::RedactableString customName;
+        customName.append(fmt::format("§r日期 {}号 已签到", day));
+        item.setCustomName(customName);
+        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        break;
     }
+    case SignStatus::CanSign: {
+        auto                              item = gmlib::world::GMItemStack("minecraft:yellow_concrete", day);
+        Bedrock::Safety::RedactableString customName;
+        customName.append(fmt::format("§r日期 {}号 未签到", day));
+        auto lore = std::vector<std::string>{"§r§7点击签到§r"};
+        item.setCustomName(customName);
+        item.setCustomLore(lore);
+        auto yday = data.yday;
+        fm.registerSlot(slot, gmlib::world::GMItemStack(item), [yday](gmlib::world::actor::GMPlayer& gmp) {
+            auto uuid = gmp.getUuid();
+            signin::signIn(uuid, yday);
+        });
+        break;
+    }
+    case SignStatus::WillSign: {
+        auto                              item = gmlib::world::GMItemStack("minecraft:light_gray_concrete", day);
+        Bedrock::Safety::RedactableString customName;
+        customName.append(std::string("不可签到"));
+        item.setCustomName(customName);
+        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        break;
+    }
+    }
+}
+
+inline gmlib::world::GMItemStack getSignInfoItem(MonthData const& md) {
     auto                              item = gmlib::world::GMItemStack("minecraft:clock", 1);
     Bedrock::Safety::RedactableString customName;
     customName.append(std::string("签到信息"));
@@ -126,7 +118,54 @@ void renderSignInChestUI(gmlib::form::ChestForm& fm, MonthData const& md) {
     lore.push_back(fmt::format("§r上次签到时间\n{}", md.last_signin_time));
     item.setCustomName(customName);
     item.setCustomLore(lore);
-    fm.registerSlot(52, item);
+    return item;
+}
+
+inline void renderChestUI1(gmlib::form::ChestForm& fm, MonthData const& md) {
+    auto year  = md.year;
+    auto month = md.month;
+    fm.setTitle(fmt::format("签到 {:04d}-{:02d}", year, month));
+    auto WeekDay = utils::calcDayOfWeek(year, month, 1);
+    int  y       = 0;
+    for (size_t index = 0; index < md.data.size(); index++) {
+        auto slot = WeekDay + y * 9;
+        if (WeekDay > 6) {
+            y++;
+            WeekDay = 0;
+        }
+        WeekDay++;
+        registerSlot(fm, md.data[index], slot, index);
+    }
+    for (auto index = 0; index < 6; index++) {
+        auto item = gmlib::world::GMItemStack("minecraft:barrier", 1);
+        fm.registerSlot(index * 9 + 0, gmlib::world::GMItemStack(item));
+        fm.registerSlot(index * 9 + 8, gmlib::world::GMItemStack(item));
+    }
+    fm.registerSlot(52, getSignInfoItem(md));
+}
+
+inline void renderChestUI2(gmlib::form::ChestForm& fm, MonthData const& md) {
+    auto year  = md.year;
+    auto month = md.month;
+    fm.setTitle(fmt::format("签到 {:04d}-{:02d}", year, month));
+    for (size_t index = 0; index < md.data.size(); index++) {
+        auto slot = index + 9;
+        registerSlot(fm, md.data[index], slot, index);
+    }
+    for (auto index = 0; index < 9; index++) {
+        auto item = gmlib::world::GMItemStack("minecraft:barrier", 1);
+        fm.registerSlot(index, gmlib::world::GMItemStack(item));
+        fm.registerSlot(index + 5 * 9, gmlib::world::GMItemStack(item));
+    }
+    fm.registerSlot(md.data.size() + 9, getSignInfoItem(md));
+}
+
+void renderSignInChestUI(gmlib::form::ChestForm& fm, MonthData const& md, bool isPE) {
+    if (isPE) {
+        renderChestUI2(fm, md);
+    } else {
+        renderChestUI1(fm, md);
+    }
 }
 void sendForm(Player& player, int month, int year) {
     auto      uuid = player.getUuid();
@@ -137,58 +176,17 @@ void sendForm(Player& player, int month, int year) {
     fm.sendTo(player);
 }
 
-// 另一种排序，现在注释掉，说不定以后会用到
-// void sendChestUI(Player& player) {
-//     auto uuid        = player.getUuid();
-//     auto bitset      = getBitSet(uuid);
-//     auto tm          = utils::getCurrentTime();
-//     auto firstDay    = tm.tm_yday - tm.tm_mday;
-//     auto daysInMonth = utils::getDaysInMonth(tm.tm_mon, tm.tm_year);
-//     auto fm          = gmlib::form::ChestForm();
-//     fm.setTitle(fmt::format("签到 {:04d}-{:02d}", tm.tm_year + 1900, tm.tm_mon + 1));
-//     // auto WeekDay = calcDayOfWeek(tm.tm_year + 1900, tm.tm_mon + 1, 1);
-//     // auto y       = 0;
-//     for (int index = 1; index <= daysInMonth; index++) {
-//         auto slot = index + 8;
-//         auto yday = index + firstDay;
-//         if (yday > tm.tm_yday) {
-//             auto                              item = gmlib::world::GMItemStack("minecraft:light_gray_concrete",
-//             index); Bedrock::Safety::RedactableString customName; customName.append(std::string("不可签到"));
-//             item.setCustomName(customName);
-//             fm.registerSlot(slot, gmlib::world::GMItemStack(item));
-//             continue;
-//         }
-//         if (bitset.test(index + firstDay)) {
-//             auto                              item = gmlib::world::GMItemStack("lime_concrete", index);
-//             Bedrock::Safety::RedactableString customName;
-//             customName.append(std::string("已签到"));
-//             item.setCustomName(customName);
-//             fm.registerSlot(slot, gmlib::world::GMItemStack(item));
-//         } else {
-//             auto                              item = gmlib::world::GMItemStack("minecraft:pink_concrete", index);
-//             Bedrock::Safety::RedactableString customName;
-//             customName.append(std::string("未签到"));
-//             item.setCustomName(customName);
-//             fm.registerSlot(slot, gmlib::world::GMItemStack(item), [yday](gmlib::world::actor::GMPlayer& gmp) {
-//                 auto uuid = gmp.getUuid();
-//                 // TODO
-//                 signIn(uuid, yday);
-//             });
-//         }
-//     }
-//     auto gmPlayer =
-//         gmlib::world::actor::GMPlayer::getServerPlayer(player.getNetworkIdentifier(), player.getClientSubId());
-//     fm.sendTo(gmPlayer);
-// }
-
 void sendChestUI(Player& player, int month, int year) {
     auto      uuid = player.getUuid();
     auto      fm   = gmlib::form::ChestForm();
     MonthData md;
     getMonthData(uuid, md, month, year);
-    renderSignInChestUI(fm, md);
     auto gmPlayer =
         gmlib::world::actor::GMPlayer::getServerPlayer(player.getNetworkIdentifier(), player.getClientSubId());
+    auto os = gmPlayer->mBuildPlatform;
+
+    // gmPlayer->getConnectionRequest()->mRawToken->mDataInfo;
+    renderSignInChestUI(fm, md, (int)os < 3);
     fm.sendTo(gmPlayer);
 }
 } // namespace signin::form
