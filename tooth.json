@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "info": {
         "name": "SignIn",
-        "description": "签到插件",
+        "description": "Minecraft 基岩版服务器(BDS) 签到插件",
         "author": "LWenK",
         "tags": [
             "platform:levilamina",
