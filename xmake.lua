@@ -14,7 +14,7 @@ end
 add_requires("levibuildscript")
 
 add_requires(
-    "gmlib 1.0.0-rc.3",
+    "gmlib 1.0.0",
     "legacymoney 0.10.0"
 )
 

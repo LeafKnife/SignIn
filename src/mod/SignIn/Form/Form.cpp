@@ -3,7 +3,7 @@
 #include "mod/SignIn/SignIn.h"
 
 #include <cstddef>
-#include <gmlib/gm/form/ChestForm.h>
+#include <gmlib/gm/ui/ChestForm.h>
 #include <gmlib/mc/world/ItemStack.h>
 #include <gmlib/mc/world/actor/Player.h>
 #include <ll/api/form/CustomForm.h>
@@ -59,53 +59,53 @@ void renderSignInForm(ll::form::CustomForm& fm, MonthData const& md) {
     if (!content.empty()) fm.appendLabel(content);
 }
 
-inline void registerSlot(gmlib::form::ChestForm& fm, SignData const& data, int slot, int index) {
+inline void registerSlot(gmlib::ui::ChestForm& fm, SignData const& data, int slot, int index) {
     auto status = data.status;
     auto day    = index + 1;
     switch (status) {
     case SignStatus::NotSign: {
-        auto                              item = gmlib::world::GMItemStack("minecraft:red_concrete", day);
+        auto                              item = gmlib::GMItemStack("minecraft:red_concrete", day);
         Bedrock::Safety::RedactableString customName;
         customName.append(fmt::format("§r日期 {}号 未签到", day));
         item.setCustomName(customName);
-        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        fm.registerSlot(slot, gmlib::GMItemStack(item));
         break;
     }
     case SignStatus::HasSign: {
-        auto                              item = gmlib::world::GMItemStack("minecraft:lime_concrete", day);
+        auto                              item = gmlib::GMItemStack("minecraft:lime_concrete", day);
         Bedrock::Safety::RedactableString customName;
         customName.append(fmt::format("§r日期 {}号 已签到", day));
         item.setCustomName(customName);
-        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        fm.registerSlot(slot, gmlib::GMItemStack(item));
         break;
     }
     case SignStatus::CanSign: {
-        auto                              item = gmlib::world::GMItemStack("minecraft:yellow_concrete", day);
+        auto                              item = gmlib::GMItemStack("minecraft:yellow_concrete", day);
         Bedrock::Safety::RedactableString customName;
         customName.append(fmt::format("§r日期 {}号 未签到", day));
         auto lore = std::vector<std::string>{"§r§7点击签到§r"};
         item.setCustomName(customName);
         item.setCustomLore(lore);
         auto yday = data.yday;
-        fm.registerSlot(slot, gmlib::world::GMItemStack(item), [yday](gmlib::world::actor::GMPlayer& gmp) {
+        fm.registerSlot(slot, gmlib::GMItemStack(item), [yday](gmlib::GMPlayer& gmp) {
             auto uuid = gmp.getUuid();
             signin::signIn(uuid, yday);
         });
         break;
     }
     case SignStatus::WillSign: {
-        auto                              item = gmlib::world::GMItemStack("minecraft:light_gray_concrete", day);
+        auto                              item = gmlib::GMItemStack("minecraft:light_gray_concrete", day);
         Bedrock::Safety::RedactableString customName;
         customName.append(std::string("不可签到"));
         item.setCustomName(customName);
-        fm.registerSlot(slot, gmlib::world::GMItemStack(item));
+        fm.registerSlot(slot, gmlib::GMItemStack(item));
         break;
     }
     }
 }
 
-inline gmlib::world::GMItemStack getSignInfoItem(MonthData const& md) {
-    auto                              item = gmlib::world::GMItemStack("minecraft:clock", 1);
+inline gmlib::GMItemStack getSignInfoItem(MonthData const& md) {
+    auto                              item = gmlib::GMItemStack("minecraft:clock", 1);
     Bedrock::Safety::RedactableString customName;
     customName.append(std::string("签到信息"));
     auto lore = std::vector<std::string>();
@@ -121,7 +121,7 @@ inline gmlib::world::GMItemStack getSignInfoItem(MonthData const& md) {
     return item;
 }
 
-inline void renderChestUI1(gmlib::form::ChestForm& fm, MonthData const& md) {
+inline void renderChestUI1(gmlib::ui::ChestForm& fm, MonthData const& md) {
     auto year  = md.year;
     auto month = md.month;
     fm.setTitle(fmt::format("签到 {:04d}-{:02d}", year, month));
@@ -137,14 +137,14 @@ inline void renderChestUI1(gmlib::form::ChestForm& fm, MonthData const& md) {
         registerSlot(fm, md.data[index], slot, index);
     }
     for (auto index = 0; index < 6; index++) {
-        auto item = gmlib::world::GMItemStack("minecraft:barrier", 1);
-        fm.registerSlot(index * 9 + 0, gmlib::world::GMItemStack(item));
-        fm.registerSlot(index * 9 + 8, gmlib::world::GMItemStack(item));
+        auto item = gmlib::GMItemStack("minecraft:barrier", 1);
+        fm.registerSlot(index * 9 + 0, gmlib::GMItemStack(item));
+        fm.registerSlot(index * 9 + 8, gmlib::GMItemStack(item));
     }
     fm.registerSlot(52, getSignInfoItem(md));
 }
 
-inline void renderChestUI2(gmlib::form::ChestForm& fm, MonthData const& md) {
+inline void renderChestUI2(gmlib::ui::ChestForm& fm, MonthData const& md) {
     auto year  = md.year;
     auto month = md.month;
     fm.setTitle(fmt::format("签到 {:04d}-{:02d}", year, month));
@@ -153,14 +153,14 @@ inline void renderChestUI2(gmlib::form::ChestForm& fm, MonthData const& md) {
         registerSlot(fm, md.data[index], slot, index);
     }
     for (auto index = 0; index < 9; index++) {
-        auto item = gmlib::world::GMItemStack("minecraft:barrier", 1);
-        fm.registerSlot(index, gmlib::world::GMItemStack(item));
-        fm.registerSlot(index + 5 * 9, gmlib::world::GMItemStack(item));
+        auto item = gmlib::GMItemStack("minecraft:barrier", 1);
+        fm.registerSlot(index, gmlib::GMItemStack(item));
+        fm.registerSlot(index + 5 * 9, gmlib::GMItemStack(item));
     }
     fm.registerSlot(md.data.size() + 9, getSignInfoItem(md));
 }
 
-void renderSignInChestUI(gmlib::form::ChestForm& fm, MonthData const& md, bool isPE) {
+void renderSignInChestUI(gmlib::ui::ChestForm& fm, MonthData const& md, bool isPE) {
     if (isPE) {
         renderChestUI2(fm, md);
     } else {
@@ -178,11 +178,11 @@ void sendForm(Player& player, int month, int year) {
 
 void sendChestUI(Player& player, int month, int year) {
     auto      uuid = player.getUuid();
-    auto      fm   = gmlib::form::ChestForm();
+    auto      fm   = gmlib::ui::ChestForm("");
     MonthData md;
     getMonthData(uuid, md, month, year);
     auto gmPlayer =
-        gmlib::world::actor::GMPlayer::getServerPlayer(player.getNetworkIdentifier(), player.getClientSubId());
+        gmlib::GMPlayer::getServerPlayer(player.getNetworkIdentifier(), player.getClientSubId());
     auto os = gmPlayer->mBuildPlatform;
 
     // gmPlayer->getConnectionRequest()->mRawToken->mDataInfo;
