@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [未发布]
 
+### 新增
+
+- 适配 GMLIB v1.0.0
+
 ## [0.1.0] - 2025-03-23
 
 - 第一次提交
