@@ -91,6 +91,15 @@ void regCommand() {
     //         output.success(uuid.asString());
     //     });
 
+    // cmd.overload().text("retro").execute([](CommandOrigin const& origin, CommandOutput& output){
+    //     auto* entity = origin.getEntity();
+    //     if (entity == nullptr || !entity->hasType(::ActorType::Player)) {
+    //         output.error("command.error.notplayer");
+    //     }
+    //     Player* player = (Player*)entity;
+    //     signin::retro(player->getUuid());
+    // });
+
     cmd.overload().execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* entity = origin.getEntity();
         if (entity == nullptr || !entity->hasType(::ActorType::Player)) {

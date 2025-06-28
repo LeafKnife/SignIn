@@ -37,7 +37,31 @@ void signIn(mce::UUID uuid, int day) {
     }
     setLastTime(uuid);
 };
+int getLastNotSignedDay(mce::UUID uuid) {
+    auto bitset = getBitSet(uuid);
+    auto today  = utils::getCurrentTime().tm_yday;
+    for (int index = today - 1; index > 0; index--) {
+        if (!bitset.test(index)) {
+            return index;
+        }
+    }
+    return -1;
+}
 
+void retro(mce::UUID uuid) {
+    auto day = getLastNotSignedDay(uuid);
+    if (day > -1) {
+        signIn(uuid, day);
+    }
+    // auto bitset = getBitSet(uuid);
+    // auto today  = utils::getCurrentTime().tm_yday;
+    // for(int index = today-1;index>0;index--){
+    //     if(!bitset.test(index)){
+    //         signIn(uuid, index);
+    //         break;
+    //     }
+    // }
+}
 void getMonthData(mce::UUID uuid, MonthData& md, int month, int year) {
     auto bitset   = getBitSet(uuid);
     auto tm       = utils::getCurrentTime();

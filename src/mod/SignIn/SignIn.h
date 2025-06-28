@@ -33,6 +33,8 @@ struct MonthData {
 
 void                       initDB();
 void                       signIn(mce::UUID uuid, int day);
+void                       retro(mce::UUID uuid);
+int                        getLastNotSignedDay(mce::UUID uuid);
 void                       getMonthData(mce::UUID uuid, MonthData& md, int month, int year);
 int                        getAcc(mce::UUID uuid);
 int                        getCont(mce::UUID uuid);

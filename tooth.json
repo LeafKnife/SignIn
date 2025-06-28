@@ -14,8 +14,8 @@
     },
     "asset_url": "https://github.com/LeafKnife/SignIn/releases/download/v$(version)/SignIn-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": ">=1.1.0",
-        "github.com/GroupMountain/GMLIB-Release": ">=1.0.0"
+        "github.com/LiteLDev/LeviLamina": ">=1.3.0",
+        "github.com/GroupMountain/GMLIB-Release": ">=1.3.0"
     },
     
     "files": {
